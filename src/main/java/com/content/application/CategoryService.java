@@ -44,6 +44,14 @@ public class CategoryService {
         categoryRepository.deleteById(id);
     }
 
+    public void deleteVideoIdFromAllCategories(Long videoId) {
+        Set<Category> categories = categoryRepository.findByVideosIds(videoId);
+        categories.stream().forEach(category -> {
+            category.getVideosIds().remove(videoId);
+            categoryRepository.save(category);
+        });
+    }
+
     public CategoryDTO changeCategoryName(UpdateCategoryNameRequest request) throws EntityObjectNotFoundException {
         Category category = findCategoryEntityById(request.getCategoryId());
         category.changeName(request.getName());

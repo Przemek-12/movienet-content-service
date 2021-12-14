@@ -53,6 +53,11 @@ public class CategoryController {
         }
     }
 
+    @PutMapping("/videos/remove/all")
+    public void deleteVideoIdFromAllCategories(@RequestParam Long videoId) {
+        categoryService.deleteVideoIdFromAllCategories(videoId);
+    }
+
     @DeleteMapping
     public void deleteCategoryById(@RequestParam String categoryId) {
         try {
