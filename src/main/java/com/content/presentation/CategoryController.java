@@ -1,6 +1,7 @@
 package com.content.presentation;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -14,6 +15,7 @@ import com.content.application.dto.CategoryDTO;
 import com.content.application.dto.UpdateCategoryNameRequest;
 import com.content.application.dto.UpdateCategoryVideosRequest;
 import com.content.application.exceptions.EntityObjectNotFoundException;
+import com.content.infrastructure.security.SecurityUtils;
 
 @RestController
 @RequestMapping("/category")
@@ -26,7 +28,18 @@ public class CategoryController {
         this.categoryService = categoryService;
     }
 
+    @DeleteMapping
+    @Secured(SecurityUtils.ROLE_ADMIN)
+    public void deleteCategoryById(@RequestParam String categoryId) {
+        try {
+            categoryService.deleteCategoryById(categoryId);
+        } catch (EntityObjectNotFoundException e) {
+            throw new ResponseStatusException(e.getStatus(), e.getMessage(), e);
+        }
+    }
+
     @PutMapping("/name")
+    @Secured(SecurityUtils.ROLE_ADMIN)
     public CategoryDTO changeCategoryName(@RequestBody UpdateCategoryNameRequest request) {
         try {
             return categoryService.changeCategoryName(request);
@@ -36,6 +49,7 @@ public class CategoryController {
     }
 
     @PutMapping("/videos/add")
+    @Secured(SecurityUtils.ROLE_ADMIN)
     public CategoryDTO addVideosToCategory(@RequestBody UpdateCategoryVideosRequest request) {
         try {
             return categoryService.addVideosToCategory(request);
@@ -45,6 +59,7 @@ public class CategoryController {
     }
 
     @PutMapping("/videos/remove")
+    @Secured(SecurityUtils.ROLE_ADMIN)
     public CategoryDTO removeVideosFromCategory(@RequestBody UpdateCategoryVideosRequest request) {
         try {
             return categoryService.removeVideosFromCategory(request);
@@ -54,17 +69,9 @@ public class CategoryController {
     }
 
     @PutMapping("/videos/remove/all")
+    @Secured(SecurityUtils.ROLE_ADMIN)
     public void deleteVideoIdFromAllCategories(@RequestParam Long videoId) {
         categoryService.deleteVideoIdFromAllCategories(videoId);
-    }
-
-    @DeleteMapping
-    public void deleteCategoryById(@RequestParam String categoryId) {
-        try {
-            categoryService.deleteCategoryById(categoryId);
-        } catch (EntityObjectNotFoundException e) {
-            throw new ResponseStatusException(e.getStatus(), e.getMessage(), e);
-        }
     }
 
 }

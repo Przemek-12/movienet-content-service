@@ -5,12 +5,14 @@ import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.content.application.dto.AddCategoryDTO;
 import com.content.application.dto.CategoryDTO;
 import com.content.application.dto.UpdateCategoryNameRequest;
 import com.content.application.dto.UpdateCategoryVideosRequest;
 import com.content.application.exceptions.EntityObjectNotFoundException;
+import com.content.application.feign.VideoServiceFeign;
 import com.content.domain.entity.Category;
 import com.content.domain.repository.CategoryRepository;
 
@@ -18,10 +20,12 @@ import com.content.domain.repository.CategoryRepository;
 public class CategoryService {
 
     private final CategoryRepository categoryRepository;
+    private final VideoServiceFeign videoServiceFeign;
 
     @Autowired
-    public CategoryService(CategoryRepository categoryRepository) {
+    public CategoryService(CategoryRepository categoryRepository, VideoServiceFeign videoServiceFeign) {
         this.categoryRepository = categoryRepository;
+        this.videoServiceFeign = videoServiceFeign;
     }
 
     protected Set<Category> addCategories(Set<AddCategoryDTO> categoriesRequests) {
@@ -31,6 +35,7 @@ public class CategoryService {
     }
 
     protected Category addCategory(AddCategoryDTO addCategoryDTO) {
+        filterVideosThatNotExist(addCategoryDTO.getVideosIds());
         return categoryRepository.save(CategoryMapper.mapToCategory(addCategoryDTO));
     }
 
@@ -39,6 +44,7 @@ public class CategoryService {
                 .orElseThrow(() -> new EntityObjectNotFoundException(Category.class.getSimpleName()));
     }
 
+    @Transactional
     public void deleteCategoryById(String id) throws EntityObjectNotFoundException {
         checkIfCategoryExists(id);
         categoryRepository.deleteById(id);
@@ -52,14 +58,17 @@ public class CategoryService {
         });
     }
 
-    public CategoryDTO changeCategoryName(UpdateCategoryNameRequest request) throws EntityObjectNotFoundException {
+    public CategoryDTO changeCategoryName(UpdateCategoryNameRequest request)
+            throws EntityObjectNotFoundException {
         Category category = findCategoryEntityById(request.getCategoryId());
         category.changeName(request.getName());
         return mapToDTO(categoryRepository.save(category));
     }
 
-    public CategoryDTO addVideosToCategory(UpdateCategoryVideosRequest request) throws EntityObjectNotFoundException {
+    public CategoryDTO addVideosToCategory(UpdateCategoryVideosRequest request)
+            throws EntityObjectNotFoundException {
         Category category = findCategoryEntityById(request.getCategoryId());
+        filterVideosThatNotExist(request.getVideosIds());
         category.addVideos(request.getVideosIds());
         return mapToDTO(categoryRepository.save(category));
     }
@@ -75,6 +84,10 @@ public class CategoryService {
         if (!categoryRepository.existsById(categoryId)) {
             throw new EntityObjectNotFoundException(Category.class.getSimpleName());
         }
+    }
+
+    private void filterVideosThatNotExist(Set<Long> videosIds) {
+        videosIds.removeIf(videoId -> !videoServiceFeign.videoExistsById(videoId));
     }
 
     private CategoryDTO mapToDTO(Category category) {

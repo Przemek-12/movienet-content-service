@@ -44,4 +44,9 @@ public class View {
         return this;
     }
 
+    public View removeCategory(Category category) {
+        this.categories.remove(category);
+        return this;
+    }
+
 }

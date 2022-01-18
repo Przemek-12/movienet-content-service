@@ -36,13 +36,22 @@ public class ViewService {
                 .orElseThrow(() -> new EntityObjectNotFoundException(View.class.getSimpleName())));
     }
 
-    public ViewDTO addCategory(AddCategoryRequest addCategoryRequest) throws EntityObjectNotFoundException {
+    public ViewDTO addCategory(AddCategoryRequest addCategoryRequest)
+            throws EntityObjectNotFoundException {
         View view = findViewEntityById(addCategoryRequest.getViewId());
         view.addCategory(categoryService.addCategory(addCategoryRequest.getAddCategoryDTO()));
         return mapToDTO(viewRepository.save(view));
     }
 
-    private void checkIfViewAlreadyExists(AddViewRequest addViewRequest) throws EntityObjectAlreadyExistsException {
+    public ViewDTO removeCategory(String viewId, String categoryId)
+            throws EntityObjectNotFoundException {
+        View view = findViewEntityById(viewId);
+        view.removeCategory(categoryService.findCategoryEntityById(categoryId));
+        return mapToDTO(viewRepository.save(view));
+    }
+
+    private void checkIfViewAlreadyExists(AddViewRequest addViewRequest)
+            throws EntityObjectAlreadyExistsException {
         if (viewRepository.existsByName(addViewRequest.getName())) {
             throw new EntityObjectAlreadyExistsException(View.class.getSimpleName());
         }

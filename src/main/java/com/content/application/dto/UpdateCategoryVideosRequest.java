@@ -3,6 +3,7 @@ package com.content.application.dto;
 import java.util.HashSet;
 import java.util.Set;
 
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
 
@@ -14,6 +15,7 @@ public class UpdateCategoryVideosRequest {
 
     private Set<Long> videosIds = new HashSet<>();
 
+    @Builder
     public UpdateCategoryVideosRequest(@NonNull String categoryId, Set<Long> videosIds) {
         this.categoryId = categoryId;
         if (videosIds != null) {
